@@ -915,7 +915,6 @@ class Client extends EventEmitter {
         const newMessage = await this.pupPage.evaluate(async (chatId, message, options, sendSeen) => {
             const chatWid = window.Store.WidFactory.createWid(chatId);
             const chat = await window.Store.Chat.find(chatWid);
-            console.log('INFO CHAT', chatWid, chat)
 
 
             if (sendSeen) {
@@ -925,8 +924,6 @@ class Client extends EventEmitter {
             const msg = await window.WWebJS.sendMessage(chat, message, options, sendSeen);
             return window.WWebJS.getMessageModel(msg);
         }, chatId, content, internalOptions, sendSeen);
-
-        // console.log(newMessage)
 
         return new Message(this, newMessage);
     }
