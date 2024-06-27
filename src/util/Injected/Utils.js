@@ -254,7 +254,7 @@ exports.LoadUtils = () => {
 
         if (isChannel) {
             const msg = new window.Store.Msg.modelClass(message);
-            const msgDataFromMsgModel = window.Store.MsgDataFromModel(msg);
+            const msgDataFromMsgModel = window.Store.MsgDataFromModel.msgDataFromMsgModel(msg);
             const isMedia = Object.keys(attOptions).length > 0;
             await window.Store.NewsletterUpdateMsgsRecordsJob.addNewsletterMsgsRecords([msgDataFromMsgModel]);
             chat.msgs.add(msg);
