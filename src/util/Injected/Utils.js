@@ -406,7 +406,7 @@ exports.LoadUtils = () => {
             mimetype: mediaData.mimetype,
             mediaObject,
             mediaType,
-            ...(sendToChannel ? { calculateToken: window.Store.SendChannelMessage.getRandomFilehash } : {})
+            ...(sendToChannel ? { calculateToken: window.Store.MediaCalculateFilehash.getRandomFilehash } : {})
         };
 
         const uploadedMedia = !sendToChannel
