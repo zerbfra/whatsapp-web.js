@@ -55,10 +55,13 @@ exports.ExposeStore = () => {
     window.Store.Settings = window.require('WAWebUserPrefsGeneral');
     window.Store.BotSecret = window.require('WAWebBotMessageSecret');
     window.Store.BotProfiles = window.require('WAWebBotProfileCollection');
-    // window.Store.SendChannelMessage = window.require('WAWebNewsletterSendMsgAction'); // sarebbero da usare questi metodi...
+
     window.Store.CryptoDependencies = window.require('WACryptoDependencies')
     window.Store.CryptoSha256 = window.require('WACryptoSha256')
     window.Store.MediaCalculateFilehash = window.require('WAMediaCalculateFilehash')
+    window.Store.MsgDataFromModel = window.require('WAWebMsgDataFromModel')
+    window.Store.NewsletterUpdateMsgsRecordsJob = window.require('WAWebNewsletterUpdateMsgsRecordsJob')
+    window.Store.NewsletterSendMessageJob = window.require('WAWebNewsletterSendMessageJob')
 
     window.Store.ForwardUtils = {
         ...window.require('WAWebForwardMessagesToChat')

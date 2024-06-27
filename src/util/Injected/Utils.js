@@ -246,7 +246,7 @@ exports.LoadUtils = () => {
             ...botOptions,
             ...extraOptions
         };
-        
+
         // Bot's won't reply if canonicalUrl is set (linking)
         if (botOptions) {
             delete message.canonicalUrl;
@@ -254,13 +254,13 @@ exports.LoadUtils = () => {
 
         if (isChannel) {
             const msg = new window.Store.Msg.modelClass(message);
-            const msgDataFromMsgModel = window.Store.SendChannelMessage.msgDataFromMsgModel(msg);
+            const msgDataFromMsgModel = window.Store.MsgDataFromModel(msg);
             const isMedia = Object.keys(attOptions).length > 0;
-            await window.Store.SendChannelMessage.addNewsletterMsgsRecords([msgDataFromMsgModel]);
+            await window.Store.NewsletterUpdateMsgsRecordsJob.addNewsletterMsgsRecords([msgDataFromMsgModel]);
             chat.msgs.add(msg);
             chat.t = msg.t;
 
-            const sendChannelMsgResponse = await window.Store.SendChannelMessage.sendNewsletterMessageJob({
+            const sendChannelMsgResponse = await window.Store.NewsletterSendMessageJob.sendNewsletterMessageJob({
                 msg: msg,
                 type: message.type === 'chat' ? 'text' : isMedia ? 'media' : 'pollCreation',
                 newsletterJid: chat.id.toJid(),
@@ -272,7 +272,7 @@ exports.LoadUtils = () => {
                 msg.serverId = sendChannelMsgResponse.serverId;
             }
             msg.updateAck(1, true);
-            await window.Store.SendChannelMessage.updateNewsletterMsgRecord(msg);
+            await window.Store.NewsletterUpdateMsgsRecordsJob.updateNewsletterMsgRecord(msg);
             return msg;
         }
 
