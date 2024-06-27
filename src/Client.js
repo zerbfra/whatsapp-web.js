@@ -113,9 +113,9 @@ class Client extends EventEmitter {
                         if (state !== 'OPENING' && state !== 'UNLAUNCHED' && state !== 'PAIRING') {
                             window.AuthStore.AppState.off('change:state', waitTillInit);
                             r();
-                        } 
+                        }
                     });
-                }); 
+                });
             }
             state = window.AuthStore.AppState.state;
             return state == 'UNPAIRED' || state == 'UNPAIRED_IDLE';
@@ -171,7 +171,7 @@ class Client extends EventEmitter {
                 const advSecretKey = await window.AuthStore.RegistrationUtils.getADVSecretKey();
                 const platform =  window.AuthStore.RegistrationUtils.DEVICE_PLATFORM;
                 const getQR = (ref) => ref + ',' + staticKeyB64 + ',' + identityKeyB64 + ',' + advSecretKey + ',' + platform;
-                
+
                 window.onQRChangedEvent(getQR(window.AuthStore.Conn.ref)); // initial qr
                 window.AuthStore.Conn.on('change:ref', (_, ref) => { window.onQRChangedEvent(getQR(ref)); }); // future QR changes
             });
@@ -201,7 +201,7 @@ class Client extends EventEmitter {
                     if (this.options.webVersionCache.type === 'local' && this.currentIndexHtml) {
                         const { type: webCacheType, ...webCacheOptions } = this.options.webVersionCache;
                         const webCache = WebCacheFactory.createWebCache(webCacheType, webCacheOptions);
-            
+
                         await webCache.persist(this.currentIndexHtml, version);
                     }
 
@@ -210,13 +210,13 @@ class Client extends EventEmitter {
                     } else {
                         // make sure all modules are ready before injection
                         // 2 second delay after authentication makes sense and does not need to be made dyanmic or removed
-                        await new Promise(r => setTimeout(r, 2000)); 
+                        await new Promise(r => setTimeout(r, 2000));
                         await this.pupPage.evaluate(ExposeLegacyStore);
                     }
 
                     // Check window.Store Injection
                     await this.pupPage.waitForFunction('window.Store != undefined');
-            
+
                     /**
                      * Current connection information
                      * @type {ClientInfo}
@@ -261,7 +261,7 @@ class Client extends EventEmitter {
             window.AuthStore.AppState.on('change:state', (_AppState, state) => { window.onAuthAppStateChangedEvent(state); });
             window.AuthStore.AppState.on('change:hasSynced', () => { window.onAppStateHasSyncedEvent(); });
             window.AuthStore.Cmd.on('offline_progress_update', () => {
-                window.onOfflineProgressUpdateEvent(window.AuthStore.OfflineMessageHandler.getOfflineDeliveryProgress()); 
+                window.onOfflineProgressUpdateEvent(window.AuthStore.OfflineMessageHandler.getOfflineDeliveryProgress());
             });
             window.AuthStore.Cmd.on('logout', async () => {
                 await window.onLogoutEvent();
@@ -274,11 +274,11 @@ class Client extends EventEmitter {
      */
     async initialize() {
 
-        let 
+        let
             /**
              * @type {puppeteer.Browser}
              */
-            browser, 
+            browser,
             /**
              * @type {puppeteer.Page}
              */
@@ -452,7 +452,7 @@ class Client extends EventEmitter {
                      * Emitted when a message is deleted for everyone in the chat.
                      * @event Client#message_revoke_everyone
                      * @param {Message} message The message that was revoked, in its current state. It will not contain the original message's data.
-                     * @param {?Message} revoked_msg The message that was revoked, before it was revoked. It will contain the message's original data. 
+                     * @param {?Message} revoked_msg The message that was revoked, before it was revoked. It will contain the message's original data.
                      * Note that due to the way this data is captured, it may be possible that this param will be undefined.
                      */
                     this.emit(Events.MESSAGE_REVOKED_EVERYONE, message, revoked_msg);
@@ -529,7 +529,7 @@ class Client extends EventEmitter {
 
             await this.pupPage.exposeFunction('onChatUnreadCountEvent', async (data) =>{
                 const chat = await this.getChatById(data.id);
-                
+
                 /**
                  * Emitted when the chat unread count changes
                  */
@@ -648,7 +648,7 @@ class Client extends EventEmitter {
             
             await this.pupPage.exposeFunction('onArchiveChatEvent', async (chat, currState, prevState) => {
                 const _chat = await this.getChatById(chat.id);
-                
+
                 /**
                  * Emitted when a chat is archived/unarchived
                  * @event Client#chat_archived
@@ -660,7 +660,7 @@ class Client extends EventEmitter {
             });
 
             await this.pupPage.exposeFunction('onEditMessageEvent', (msg, newBody, prevBody) => {
-                
+
                 if(msg.type === 'revoked'){
                     return;
                 }
@@ -675,7 +675,7 @@ class Client extends EventEmitter {
             });
             
             await this.pupPage.exposeFunction('onAddMessageCiphertextEvent', msg => {
-                
+
                 /**
                  * Emitted when messages are edited
                  * @event Client#message_ciphertext
@@ -725,7 +725,7 @@ class Client extends EventEmitter {
                 }).bind(module);
             }
         });
-    }    
+    }
 
     async initWebVersionCache() {
         const { type: webCacheType, ...webCacheOptions } = this.options.webVersionCache;

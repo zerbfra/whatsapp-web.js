@@ -26,13 +26,15 @@ exports.LoadUtils = () => {
 
     window.WWebJS.sendMessage = async (chat, content, options = {}) => {
         let attOptions = {};
+        const isChannel = chat.isNewsletter;
         if (options.attachment) {
             attOptions = options.sendMediaAsSticker
                 ? await window.WWebJS.processStickerData(options.attachment)
                 : await window.WWebJS.processMediaData(options.attachment, {
                     forceVoice: options.sendAudioAsVoice,
                     forceDocument: options.sendMediaAsDocument,
-                    forceGif: options.sendVideoAsGif
+                    forceGif: options.sendVideoAsGif,
+                    sendToChannel: isChannel
                 });
             
             attOptions.caption = options.caption;
@@ -244,10 +246,34 @@ exports.LoadUtils = () => {
             ...botOptions,
             ...extraOptions
         };
-        
+
         // Bot's won't reply if canonicalUrl is set (linking)
         if (botOptions) {
             delete message.canonicalUrl;
+        }
+
+        if (isChannel) {
+            const msg = new window.Store.Msg.modelClass(message);
+            const msgDataFromMsgModel = window.Store.MsgDataFromModel.msgDataFromMsgModel(msg);
+            const isMedia = Object.keys(attOptions).length > 0;
+            await window.Store.NewsletterUpdateMsgsRecordsJob.addNewsletterMsgsRecords([msgDataFromMsgModel]);
+            chat.msgs.add(msg);
+            chat.t = msg.t;
+
+            const sendChannelMsgResponse = await window.Store.NewsletterSendMessageJob.sendNewsletterMessageJob({
+                msg: msg,
+                type: message.type === 'chat' ? 'text' : isMedia ? 'media' : 'pollCreation',
+                newsletterJid: chat.id.toJid(),
+                ...(isMedia ? { mediaMetadata: msg.avParams() } : {})
+            });
+
+            if (sendChannelMsgResponse.success) {
+                msg.t = sendChannelMsgResponse.ack.t;
+                msg.serverId = sendChannelMsgResponse.serverId;
+            }
+            msg.updateAck(1, true);
+            await window.Store.NewsletterUpdateMsgsRecordsJob.updateNewsletterMsgRecord(msg);
+            return msg;
         }
 
         await window.Store.SendMessage.addAndSendMsgToChat(chat, message);
@@ -341,7 +367,7 @@ exports.LoadUtils = () => {
         return stickerInfo;
     };
 
-    window.WWebJS.processMediaData = async (mediaInfo, { forceVoice, forceDocument, forceGif }) => {
+    window.WWebJS.processMediaData = async (mediaInfo, { forceVoice, forceDocument, forceGif, sendToChannel }) => {
         const file = window.WWebJS.mediaInfoToFile(mediaInfo);
         const mData = await window.Store.OpaqueData.createFromData(file, file.type);
         const mediaPrep = window.Store.MediaPrep.prepRawMedia(mData, { asDocument: forceDocument });
@@ -376,11 +402,16 @@ exports.LoadUtils = () => {
         mediaObject.consolidate(mediaData.toJSON());
         mediaData.mediaBlob.autorelease();
 
-        const uploadedMedia = await window.Store.MediaUpload.uploadMedia({
+        const dataToUpload = {
             mimetype: mediaData.mimetype,
             mediaObject,
-            mediaType
-        });
+            mediaType,
+            ...(sendToChannel ? { calculateToken: window.Store.MediaCalculateFilehash.getRandomFilehash } : {})
+        };
+
+        const uploadedMedia = !sendToChannel
+        ? await window.Store.MediaUpload.uploadMedia(dataToUpload)
+        : await window.Store.MediaUpload.uploadUnencryptedMedia(dataToUpload);
 
         const mediaEntry = uploadedMedia.mediaEntry;
         if (!mediaEntry) {
@@ -445,6 +476,12 @@ exports.LoadUtils = () => {
             const chatWid = window.Store.WidFactory.createWid((chat.id._serialized));
             await window.Store.GroupMetadata.update(chatWid);
             res.groupMetadata = chat.groupMetadata.serialize();
+        }
+
+        if (chat.newsletterMetadata) {
+            await window.Store.NewsletterMetadataCollection.update(chat.id);
+            model.channelMetadata = chat.newsletterMetadata.serialize();
+            model.channelMetadata.createdAtTs = chat.newsletterMetadata.creationTime;
         }
         
         res.lastMessage = null;
